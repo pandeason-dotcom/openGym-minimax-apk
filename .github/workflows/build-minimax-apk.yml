@@ -44,18 +44,21 @@ jobs:
       - name: Compile independently installable debug APK
         working-directory: openGym/frontend/android
         run: |
+          # An isolated package ID so this new debug signature does not conflict with v1.
+          sed -i 's/applicationIdSuffix "\.test"/applicationIdSuffix "\.test.m3v2"/' app/build.gradle
+          grep 'applicationIdSuffix "\.test.m3v2"' app/build.gradle
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
       - name: Prepare APK and checksum
         run: |
           mkdir -p dist
-          cp openGym/frontend/android/app/build/outputs/apk/debug/app-debug.apk dist/openGym-MiniMax-M3-debug.apk
+          cp openGym/frontend/android/app/build/outputs/apk/debug/app-debug.apk dist/openGym-MiniMax-M3-v2-debug.apk
           cd dist
-          sha256sum openGym-MiniMax-M3-debug.apk > openGym-MiniMax-M3-debug.apk.sha256
+          sha256sum openGym-MiniMax-M3-v2-debug.apk > openGym-MiniMax-M3-v2-debug.apk.sha256
       - name: Upload download-ready APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: openGym-MiniMax-M3-APK
+          name: openGym-MiniMax-M3-v2-APK
           path: dist/*
           retention-days: 30
           if-no-files-found: error
@@ -63,4 +66,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "minimax-m3-build-${{ github.run_number }}" dist/openGym-MiniMax-M3-debug.apk dist/openGym-MiniMax-M3-debug.apk.sha256 --repo "${{ github.repository }}" --title "openGym MiniMax-M3 Android test build ${{ github.run_number }}" --notes "Third-party modified debug build. Uses independent Android application ID ch.duartesantos.opengym.test. Backup data before changing apps. MiniMax API key is entered on the phone only."
+          gh release create "minimax-m3-build-${{ github.run_number }}" dist/openGym-MiniMax-M3-v2-debug.apk dist/openGym-MiniMax-M3-v2-debug.apk.sha256 --repo "${{ github.repository }}" --title "openGym MiniMax-M3 Android test build ${{ github.run_number }}" --notes "Third-party experimental v2 debug build; uses new application ID ch.duartesantos.opengym.test.m3v2 for side-by-side installation. MiniMax-M3 thinking disabled; one retry on interrupted sockets, which may incur a second provider API charge. Not yet validated on physical Android device. Keep original app and backup data."
