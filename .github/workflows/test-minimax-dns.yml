@@ -1,0 +1,24 @@
+name: Test MiniMax API DNS without credentials
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/test-minimax-dns.yml']
+permissions:
+  contents: read
+jobs:
+  dns:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: DNS and HTTPS tests
+        shell: bash
+        run: |
+          set +e
+          for host in api.minimaxi.com api.minimax.io; do
+            echo "=== $host DNS ==="
+            getent ahostsv4 "$host" | head -5
+            echo "DNS exit status: ${PIPESTATUS[0]}"
+            echo "=== $host HTTPS (no API key) ==="
+            curl -4 --max-time 15 -sS -o /dev/null -w 'HTTP status %{http_code}; remote IP %{remote_ip}; time %{time_total}s\n' "https://$host/v1/models"
+            echo "curl exit status: $?"
+          done
